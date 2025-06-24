@@ -1,5 +1,5 @@
 import React from 'react';
-import useFetch from '../../hooks/UseFetch';
+import useFetch from '../../hooks/useFetch';
 import ProductCard from './ProductCard';
 
 const ProductSection = () => {
