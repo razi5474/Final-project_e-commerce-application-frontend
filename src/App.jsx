@@ -1,12 +1,21 @@
-import React from 'react'
-import Navbar from './components/layout/navbar'
+import React,{useEffect} from 'react'
+import { RouterProvider } from 'react-router-dom'
+import { router } from './Routes/Router'
+import { Toaster } from 'react-hot-toast';
+import { useDispatch,useSelector } from 'react-redux';
+import { setInitialTheme } from './Redux/Features/shared/themeSlice';
 
 const App = () => {
+  const dispatch = useDispatch();
+  const mode = useSelector(state => state.theme.mode);
+
+  useEffect(() => {
+    dispatch(setInitialTheme(mode));
+  }, [dispatch, mode]);
   return (
     <div>
-      <Navbar/>
-      <h1 className='text-2xl text-amber-200 bg-blue-900 m-[30px] text-center'>working on e commerce website<br/>
-      stay Tuned...</h1>
+      <Toaster position="top-right" reverseOrder={false} />
+      <RouterProvider router={router} /> 
       
     </div>
   )
