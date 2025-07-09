@@ -24,7 +24,7 @@ const UserNavbar = () => {
     }
     finally{
       dispatch(clearUser());
-      navigate("/login"); // Redirect to login page after logout
+      navigate("/login", { replace: true });// Redirect to login page after logout
     }
 
   };
