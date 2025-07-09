@@ -4,6 +4,7 @@ import { toast } from 'react-hot-toast';
 import { useNavigate } from 'react-router-dom';
 import { FiMinus, FiPlus, FiX } from 'react-icons/fi';
 import BackButton from '../components/common/BackButton';
+import {loadStripe} from '@stripe/stripe-js';
 
 const Cart = () => {
   const [cart, setCart] = useState(null);
@@ -58,6 +59,22 @@ const Cart = () => {
   if (!cart || cart.Products.length === 0) {
     return <div className="text-center py-10"><h2 className="text-2xl font-semibold text-base-content">Your cart is empty</h2></div>;
   }
+  const makePayment =async()=>{
+    try {
+      const stripe = await loadStripe(import.meta.env.VITE_STRIPE_PUBLISHABLE_KEY)
+      const session = await api.post('/payment/create-checkout-session',{ products: cart?.Products })
+      console.log(session)
+      const result = await stripe.redirectToCheckout({
+      sessionId: session.data.sessionId,
+      });
+      if (result.error) {
+      toast.error(result.error.message);
+      }
+    } catch (error) {
+      
+    }
+    
+  }
 
   return (
     <div className="container mx-auto px-4 py-8">
@@ -107,14 +124,14 @@ const Cart = () => {
           <div className="flex justify-between py-2"><span>Delivery</span><span className="text-green-600">Free</span></div>
           <hr className="my-3" />
           <div className="flex justify-between font-bold text-lg"><span>Total</span><span>₹{cart.totalPrice}</span></div>
-          <button onClick={() => navigate('/checkout')} className="btn btn-primary w-full mt-6 text-white">Proceed to Checkout</button>
+          <button onClick={() => navigate('/user/checkout')} className="btn btn-primary w-full mt-6 text-white">Proceed to Checkout</button>
           <div className="mt-6 text-center text-sm text-gray-500">
             We accept:
             <div className="flex justify-center gap-3 mt-2">
-              <img src="/payment/paypal.svg" alt="PayPal" className="h-5" />
-              <img src="/payment/stripe.svg" alt="Stripe" className="h-5" />
-              <img src="/payment/applepay.svg" alt="Apple Pay" className="h-5" />
-              <img src="/payment/gpay.svg" alt="GPay" className="h-5" />
+              <img src="/images/paypal.png" alt="PayPal" className="h-8" />
+              <img src="/images/Stripe-Emblem.png" alt="Stripe" className="h-8" />
+              <img src="/images/Apple-Pay-Logo-0٤.png" alt="Apple Pay" className="h-8" />
+              <img src="/images/g-pay.png" alt="GPay" className="h-8" />
             </div>
           </div>
         </div>

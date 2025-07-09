@@ -11,7 +11,7 @@ const AllProducts = () => {
   useEffect(() => {
     const fetchAllProducts = async () => {
       try {
-        const { data } = await api.get("/product/all"); // 👈 make sure this endpoint exists
+        const { data } = await api.get("/product/all?limit=1000"); // 👈 make sure this endpoint exists
         setProducts(data.products);
       } catch (error) {
         console.error("Failed to fetch all products", error);

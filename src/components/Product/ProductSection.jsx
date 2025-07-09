@@ -3,7 +3,7 @@ import useFetch from '../../hooks/useFetch';
 import ProductCard from './ProductCard';
 
 const ProductSection = () => {
-  const { data: products, loading, error } = useFetch('/product/all');
+  const { data: products, loading, error } = useFetch('/product/all?limit=1000');
 
   if (loading) {
     return (

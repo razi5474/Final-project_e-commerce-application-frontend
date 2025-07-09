@@ -63,7 +63,7 @@ const UserNavbar = () => {
             <div tabIndex={0} role="button" className="btn btn-ghost btn-circle avatar">
               <div className="w-10 rounded-full">
                 <img
-                  src="https://img.daisyui.com/images/stock/photo-1534528741775-53994a69daeb.webp"
+                  src="/images/man_2922510.png"
                   alt="User profile"
                 />
               </div>
@@ -108,7 +108,7 @@ const UserNavbar = () => {
           </button>
 
           <div className="flex items-center justify-between">
-            <button aria-label="Cart">
+            <button aria-label="Cart" onClick={() => navigate('/user/cart')}>
               <BsCart3 className="text-2xl" />
             </button>
 
@@ -118,7 +118,7 @@ const UserNavbar = () => {
                 <div className="w-10 rounded-full">
                   <img
                     alt="User"
-                    src="https://img.daisyui.com/images/stock/photo-1534528741775-53994a69daeb.webp"
+                    src="/images/man_2922510.png"
                   />
                 </div>
               </div>

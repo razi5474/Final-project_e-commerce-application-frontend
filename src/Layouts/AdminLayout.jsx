@@ -1,60 +1,61 @@
 import React, { useEffect, useState } from 'react';
-import SellerNavbar from '../components/layout/seller/SellerNavbar';
+import AdminNavbar from '../components/layout/admin/AdminNavbar';
+import AdminSidebar from '../components/layout/admin/AdminSidebar';
 import Footer from '../components/layout/Footer';
 import { Outlet } from 'react-router-dom';
 import { useDispatch, useSelector } from 'react-redux';
 import { api } from '../config/axiosInstance';
 import { saveUser, clearUser } from '../Redux/Features/user/userSlice';
 import Loader from '../components/common/Loader';
-import SellerSidebar from '../components/layout/seller/sellerSidebar';
 
-const SellerLayout = () => {
+const AdminLayout = () => {
   const dispatch = useDispatch();
   const { isAuthUser, userData } = useSelector((state) => state.user);
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    const checkSeller = async () => {
+    const checkAdmin = async () => {
       if (!document.cookie.includes('token')) {
         setIsLoading(false);
         return;
       }
 
       try {
-        const { data } = await api.get('/seller/check-seller');
+        const { data } = await api.get('/admin/check-admin');
         dispatch(saveUser(data.userObject));
       } catch (error) {
         if (error.response?.status !== 401) {
-          console.error('Seller check failed', error);
+          console.error('Admin check failed', error);
         }
         dispatch(clearUser());
       } finally {
         setIsLoading(false);
       }
     };
-    checkSeller();
+
+    checkAdmin();
   }, [dispatch]);
 
-  if (isLoading) return <Loader message="Loading seller layout..." />;
+  if (isLoading) return <Loader message="Loading admin layout..." />;
 
-  const isSeller = isAuthUser && userData?.role === 'seller';
+  const isAdmin = isAuthUser && userData?.role === 'admin';
+
+  if (!isAdmin) {
+    return <div className="text-center mt-20 text-red-600 font-semibold">Unauthorized Access</div>;
+  }
 
   return (
     <div className="flex flex-col min-h-screen">
-      {isSeller && <SellerNavbar />}
-
-      {/* Content area (sidebar + main content) */}
+      <AdminNavbar />
       <div className="flex flex-1">
-        <SellerSidebar />
+        <AdminSidebar />
         <main className="flex-1 bg-base-100 text-base-content p-4 overflow-y-auto">
           <Outlet />
         </main>
       </div>
-
-      {/* Footer stays at bottom */}
       <Footer />
     </div>
   );
 };
 
-export default SellerLayout;
+export default AdminLayout;

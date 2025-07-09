@@ -12,17 +12,23 @@ const ProtectedRoutes = ({ allowedRoles }) => {
   const [isLoading, setIsLoading] = useState(true);
 
   // ✅ Memoized check to avoid re-creation
-  const checkUser = useCallback(async () => {
-    try {
-      const { data } = await api.get('/user/check-user', { withCredentials: true });
-      dispatch(saveUser(data.userObject));
-    } catch (err) {
-      console.error("❌ Auth Error:", err.message);
-      dispatch(clearUser());
-    } finally {
-      setIsLoading(false);
-    }
-  }, [dispatch]);
+ const checkUser = useCallback(async () => {
+  try {
+    let endpoint = '/user/check-user';
+    if (allowedRoles?.includes('seller')) endpoint = '/seller/check-seller';
+    if (allowedRoles?.includes('admin')) endpoint = '/admin/check-admin';
+
+    const { data } = await api.get(endpoint, { withCredentials: true });
+
+    const fallback = data.userObject || data.loggedinUser || data.admin || {};
+    dispatch(saveUser(fallback));
+  } catch (err) {
+    console.error("❌ Auth Error:", err.message);
+    dispatch(clearUser());
+  } finally {
+    setIsLoading(false);
+  }
+}, [dispatch, allowedRoles]);
 
   useEffect(() => {
     checkUser();
