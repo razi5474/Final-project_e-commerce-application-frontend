@@ -6,6 +6,7 @@ import { useDispatch } from 'react-redux';
 import { api } from '../config/axiosInstance';
 import { saveUser, clearUser } from '../Redux/Features/user/userSlice';
 import { AiOutlineEye, AiOutlineEyeInvisible } from 'react-icons/ai';
+import { toast } from 'react-hot-toast';
 
 const Register = ({ role }) => {
   const navigate = useNavigate();
@@ -13,6 +14,7 @@ const Register = ({ role }) => {
   const [serverError, setServerError] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const [successMessage, setSuccessMessage] = useState('');
 
   const user = {
     role: 'user',
@@ -40,15 +42,15 @@ const Register = ({ role }) => {
       }
 
       const response = await api.post(user.signupAPI, payload);
-      const userObject = response?.data?.userObject;
+      const userObject = response?.data?.userData;
 
       if (userObject?.role !== user.role) {
         setServerError(`Role mismatch: expected ${user.role}, got ${userObject?.role}`);
         return;
       }
 
-      dispatch(saveUser(userObject));
-      navigate(user.profileRoute);
+      navigate(`/register-success?role=${user.role}`);
+      formik.resetForm();
     } catch (error) {
       const msg = error.response?.data?.message || error.response?.data?.error || "Something went wrong";
       console.error('Registration Error:', msg);
@@ -99,7 +101,6 @@ const Register = ({ role }) => {
             {serverError}
           </div>
         )}
-
         <form onSubmit={formik.handleSubmit} className="space-y-5">
           {[
             { id: 'name', label: 'Full Name', type: 'text' },

@@ -4,17 +4,20 @@ import { useNavigate, NavLink } from 'react-router-dom';
 import { useDispatch } from 'react-redux';
 import { clearUser } from '../../../Redux/Features/user/userSlice';
 import ThemeToggle from '../ThemeToggle';
-
+import { api } from '../../../config/axiosInstance';
+import { toast } from 'react-hot-toast';
 const AdminNavbar = () => {
   const dispatch = useDispatch();
   const navigate = useNavigate();
   const [menuOpen, setMenuOpen] = useState(false);
 
-  const handleLogout = async () => {
+   const handleLogout = async () => {
     try {
-      await fetch('/admin/logout');
+      await api.get('/user/logout'); // ✅ Use same endpoint as User
+      toast.success('Logout successful');
     } catch (err) {
       console.error('Logout failed', err);
+      toast.error('Logout failed');
     } finally {
       dispatch(clearUser());
       navigate('/admin/login');

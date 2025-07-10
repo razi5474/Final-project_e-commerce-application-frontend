@@ -35,6 +35,7 @@ import ManageProducts from "../Pages/admin/ManageProducts";
 import AdminOrders from "../Pages/admin/AdminOrders";
 import AdminReviews from "../Pages/admin/AdminReviews";
 import AdminCategories from "../Pages/admin/AdminCategories";
+import RegisterSuccess from "../Pages/RegisterSuccess";
 
 export const router = createBrowserRouter([
     {
@@ -167,6 +168,11 @@ export const router = createBrowserRouter([
         ],
         },
     ],
+    },
+    {
+        path: "/register-success",
+        element: <RegisterSuccess />
+        
     },
 
     {
