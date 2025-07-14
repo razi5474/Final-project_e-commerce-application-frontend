@@ -1,11 +1,14 @@
 import React, { useEffect, useState } from "react";
 import { api } from "../../config/axiosInstance";
-import { FaEdit } from "react-icons/fa";
+import { FaEdit, FaTrash } from "react-icons/fa";
 import { useNavigate } from "react-router-dom";
+import toast from "react-hot-toast";
+
 
 const ProductList = () => {
   const [products, setProducts] = useState([]);
   const navigate = useNavigate();
+  const [selectedProductId, setSelectedProductId] = useState(null);
 
   useEffect(() => {
     const fetchProducts = async () => {
@@ -26,6 +29,18 @@ const ProductList = () => {
   const handleImageClick = (id) => {
     navigate(`/product/productDeatails/${id}`); // navigate to product details page
   };
+
+  const handleDelete = async () => {
+  try {
+    await api.delete(`/product/delete/${selectedProductId}`);
+    setProducts((prev) => prev.filter(p => p._id !== selectedProductId));
+    toast.success(" Product deleted");
+    setSelectedProductId(null);
+  } catch (err) {
+    toast.error(" Failed to delete product");
+    console.error(err);
+  }
+};
 
   return (
     <div className="flex-1 px-1 sm:px-4 md:px-5 py-2 sm:py-4 md:py-8 flex flex-col justify-between">
@@ -55,7 +70,7 @@ const ProductList = () => {
                   {/* Product image & title (title hidden on mobile) */}
                   <td className="px-4 py-3 flex items-center gap-3 max-w-xs truncate">
                     <img
-                      src={product.images?.[0] || "https://via.placeholder.com/50"}
+                      src={product.images?.[1] || "https://via.placeholder.com/50"}
                       alt={product.title}
                       onClick={() => handleImageClick(product._id)}
                       className="w-12 h-12 object-cover border rounded cursor-pointer"
@@ -93,13 +108,23 @@ const ProductList = () => {
 
                   {/* Edit button – always shown */}
                   <td className="px-4 py-3 text-center">
-                    <button
-                      onClick={() => handleEdit(product._id)}
-                      className="text-blue-600 hover:text-blue-800"
-                      title="Edit Product"
-                    >
-                      <FaEdit size={16} />
-                    </button>
+                    <div className="flex justify-center gap-3">
+                      <button
+                        onClick={() => handleEdit(product._id)}
+                        className="text-blue-600 hover:text-blue-800"
+                        title="Edit Product"
+                      >
+                        <FaEdit size={16} />
+                      </button>
+
+                      <button
+                        onClick={() => setSelectedProductId(product._id)}
+                        className="text-red-600 hover:text-red-800"
+                        title="Delete Product"
+                      >
+                        <FaTrash size={16} />
+                      </button>
+                    </div>
                   </td>
                 </tr>
               ))}
@@ -114,6 +139,24 @@ const ProductList = () => {
           </table>
         </div>
       </div>
+      {selectedProductId && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg p-6 w-[90%] max-w-md space-y-4">
+            <h3 className="text-xl font-semibold text-red-600">Confirm Deletion</h3>
+            <p className="text-sm text-gray-700">
+              Are you sure you want to delete this product? This action cannot be undone.
+            </p>
+            <div className="flex justify-end gap-2 pt-4">
+              <button className="btn btn-sm" onClick={() => setSelectedProductId(null)}>
+                Cancel
+              </button>
+              <button className="btn btn-sm btn-error text-white" onClick={handleDelete}>
+                Yes, Delete
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
