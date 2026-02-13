@@ -1,7 +1,7 @@
-import { useState,useEffect } from "react";
+import { useState, useEffect } from "react";
 import { api } from "../../config/axiosInstance";
 import { useNavigate } from "react-router-dom";
-import { FiSearch } from "react-icons/fi";
+import { Search } from "lucide-react";
 
 const SearchBar = () => {
   const [query, setQuery] = useState("");
@@ -36,28 +36,35 @@ const SearchBar = () => {
   };
 
   return (
-    <div className="relative w-full">
-      <div className="flex items-center border border-base-300 bg-base-200 rounded-md px-3 py-.5">
-        <FiSearch className="mr-2 text-base-content" />
+    <div className="relative w-full max-w-md mx-auto">
+      <div className="relative">
+        <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+          <Search className="h-4 w-4 text-base-content/50" />
+        </div>
         <input
           type="text"
           value={query}
-          placeholder="Search for products"
+          placeholder="Search for products..."
           onChange={(e) => setQuery(e.target.value)}
-          className="w-full px-4 py-1.5 rounded-md border border-base-300 bg-base-200 focus:outline-none focus:ring-2 focus:ring-primary text-sm text-base-content " 
+          className="input input-sm input-bordered w-full pl-10 bg-base-200/50 focus:bg-base-100 transition-all rounded-lg"
         />
       </div>
 
       {suggestions.length > 0 && (
-        <ul className="absolute z-50 bg-base-100 border border-base-300 w-full mt-1 rounded-md shadow-lg max-h-64 overflow-y-auto">
+        <ul className="absolute z-50 bg-base-100 border border-base-200 w-full mt-2 rounded-lg shadow-xl max-h-64 overflow-y-auto">
           {suggestions.map((item) => (
             <li
               key={item._id}
-              className="px-4 py-2 cursor-pointer hover:bg-base-200 flex items-center gap-2"
+              className="px-4 py-3 cursor-pointer hover:bg-base-200 flex items-center gap-3 border-b border-base-100 last:border-none transition-colors"
               onClick={() => handleSelect(item._id)}
             >
-              <img src={item.images?.[1] || "/default-product.jpg"} alt="product" className="w-8 h-8 object-contain rounded" />
-              <span className="text-sm">{item.title}</span>
+              <div className="w-10 h-10 rounded-md bg-base-200 flex items-center justify-center overflow-hidden">
+                <img src={item.images?.[1] || "/default-product.jpg"} alt="product" className="w-full h-full object-cover" />
+              </div>
+              <div className="flex flex-col">
+                <span className="text-sm font-medium">{item.title}</span>
+                <span className="text-xs text-base-content/50 capitalize">{item.category}</span>
+              </div>
             </li>
           ))}
         </ul>

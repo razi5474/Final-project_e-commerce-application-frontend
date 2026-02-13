@@ -1,12 +1,12 @@
 import React, { useState } from 'react';
 import { useFormik } from 'formik';
 import * as Yup from 'yup';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 import { useDispatch } from 'react-redux';
 import { api } from '../config/axiosInstance';
-import { saveUser, clearUser } from '../Redux/Features/user/userSlice';
-import { AiOutlineEye, AiOutlineEyeInvisible } from 'react-icons/ai';
-import { toast } from 'react-hot-toast';
+import { clearUser } from '../Redux/Features/user/userSlice';
+import { Eye, EyeOff, UserPlus, Mail, Phone, Lock, User, MapPin, Store, FileText } from 'lucide-react';
+import { motion } from 'framer-motion';
 
 const Register = ({ role }) => {
   const navigate = useNavigate();
@@ -14,7 +14,7 @@ const Register = ({ role }) => {
   const [serverError, setServerError] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
-  const [successMessage, setSuccessMessage] = useState('');
+  const [loading, setLoading] = useState(false);
 
   const user = {
     role: 'user',
@@ -32,6 +32,7 @@ const Register = ({ role }) => {
 
   const submitData = async (values) => {
     setServerError('');
+    setLoading(true);
     try {
       const payload = { ...values };
 
@@ -56,6 +57,8 @@ const Register = ({ role }) => {
       console.error('Registration Error:', msg);
       setServerError(msg);
       dispatch(clearUser());
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -90,145 +93,147 @@ const Register = ({ role }) => {
   });
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-tr from-blue-100 to-indigo-200 dark:from-gray-900 dark:to-gray-800 px-4 py-10">
-      <div className="w-full max-w-lg bg-white dark:bg-base-100 rounded-2xl shadow-2xl p-8">
-        <h2 className="text-3xl font-bold text-center text-primary dark:text-white mb-6">
-          {role === 'seller' ? 'Join as a Seller' : 'Create an Account'}
-        </h2>
+    <div className="min-h-screen flex items-center justify-center bg-base-200 px-4 py-12">
+      <motion.div
+        initial={{ opacity: 0, scale: 0.95 }}
+        animate={{ opacity: 1, scale: 1 }}
+        className="card w-full max-w-lg bg-base-100 shadow-xl"
+      >
+        <div className="card-body">
+          <h2 className="text-3xl font-bold text-center mb-6">
+            {role === 'seller' ? 'Join as a Seller' : 'Create an Account'}
+          </h2>
 
-        {serverError && (
-          <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-2 rounded-md text-sm mb-4">
-            {serverError}
-          </div>
-        )}
-        <form onSubmit={formik.handleSubmit} className="space-y-5">
-          {[
-            { id: 'name', label: 'Full Name', type: 'text' },
-            { id: 'email', label: 'Email', type: 'email' },
-            { id: 'phone', label: 'Phone Number', type: 'text', maxLength: 10 },
-          ].map(({ id, label, type, ...rest }) => (
-            <div key={id}>
-              <label htmlFor={id} className="block text-sm font-semibold text-gray-700 dark:text-white">
-                {label}
-              </label>
-              <input
-                id={id}
-                type={type}
-                {...formik.getFieldProps(id)}
-                {...rest}
-                className={`mt-1 w-full px-4 py-2 border rounded-xl bg-gray-50 dark:bg-base-200 focus:outline-none focus:ring-2 focus:ring-primary ${
-                  formik.touched[id] && formik.errors[id] ? 'border-red-500' : 'border-gray-300'
-                }`}
-              />
-              {formik.touched[id] && formik.errors[id] && (
-                <p className="text-xs text-red-500 mt-1">{formik.errors[id]}</p>
-              )}
+          {serverError && (
+            <div className="alert alert-error text-sm py-2 rounded-lg mb-4">
+              <svg xmlns="http://www.w3.org/2000/svg" className="stroke-current shrink-0 h-6 w-6" fill="none" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+              <span>{serverError}</span>
             </div>
-          ))}
-
-          {/* Password */}
-          <div className="relative">
-            <label htmlFor="password" className="block text-sm font-semibold text-gray-700 dark:text-white">
-              Password
-            </label>
-            <input
-              id="password"
-              type={showPassword ? 'text' : 'password'}
-              {...formik.getFieldProps('password')}
-              className={`mt-1 w-full px-4 py-2 border rounded-xl bg-gray-50 dark:bg-base-200 focus:outline-none focus:ring-2 focus:ring-primary ${
-                formik.touched.password && formik.errors.password ? 'border-red-500' : 'border-gray-300'
-              }`}
-            />
-            <button
-              type="button"
-              onClick={() => setShowPassword(!showPassword)}
-              className="absolute top-[38px] right-3 text-gray-600"
-            >
-              {showPassword ? <AiOutlineEyeInvisible /> : <AiOutlineEye />}
-            </button>
-            {formik.touched.password && formik.errors.password && (
-              <p className="text-xs text-red-500 mt-1">{formik.errors.password}</p>
-            )}
-          </div>
-
-          {/* Confirm Password */}
-          <div className="relative">
-            <label htmlFor="confirmPassword" className="block text-sm font-semibold text-gray-700 dark:text-white">
-              Confirm Password
-            </label>
-            <input
-              id="confirmPassword"
-              type={showConfirmPassword ? 'text' : 'password'}
-              {...formik.getFieldProps('confirmPassword')}
-              className={`mt-1 w-full px-4 py-2 border rounded-xl bg-gray-50 dark:bg-base-200 focus:outline-none focus:ring-2 focus:ring-primary ${
-                formik.touched.confirmPassword && formik.errors.confirmPassword ? 'border-red-500' : 'border-gray-300'
-              }`}
-            />
-            <button
-              type="button"
-              onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-              className="absolute top-[38px] right-3 text-gray-600"
-            >
-              {showConfirmPassword ? <AiOutlineEyeInvisible /> : <AiOutlineEye />}
-            </button>
-            {formik.touched.confirmPassword && formik.errors.confirmPassword && (
-              <p className="text-xs text-red-500 mt-1">{formik.errors.confirmPassword}</p>
-            )}
-          </div>
-
-          {/* Seller-specific fields */}
-          {role === 'seller' && (
-            <>
-              {[{ id: 'storeName', label: 'Store Name' },
-                { id: 'storeDescription', label: 'Store Description', isTextarea: true },
-                { id: 'storeAddress', label: 'Store Address' }
-              ].map(({ id, label, isTextarea }) => (
-                <div key={id}>
-                  <label htmlFor={id} className="block text-sm font-semibold text-gray-700 dark:text-white">
-                    {label}
-                  </label>
-                  {isTextarea ? (
-                    <textarea
-                      id={id}
-                      {...formik.getFieldProps(id)}
-                      rows={3}
-                      className={`mt-1 w-full px-4 py-2 border rounded-xl bg-gray-50 dark:bg-base-200 focus:outline-none focus:ring-2 focus:ring-primary ${
-                        formik.touched[id] && formik.errors[id] ? 'border-red-500' : 'border-gray-300'
-                      }`}
-                    />
-                  ) : (
-                    <input
-                      id={id}
-                      type="text"
-                      {...formik.getFieldProps(id)}
-                      className={`mt-1 w-full px-4 py-2 border rounded-xl bg-gray-50 dark:bg-base-200 focus:outline-none focus:ring-2 focus:ring-primary ${
-                        formik.touched[id] && formik.errors[id] ? 'border-red-500' : 'border-gray-300'
-                      }`}
-                    />
-                  )}
-                  {formik.touched[id] && formik.errors[id] && (
-                    <p className="text-xs text-red-500 mt-1">{formik.errors[id]}</p>
-                  )}
-                </div>
-              ))}
-            </>
           )}
 
-          <button
-            type="submit"
-            className="w-full bg-gradient-to-r from-primary to-blue-500 text-white py-2.5 rounded-xl font-semibold shadow-md hover:opacity-90 transition"
-          >
-            Register
-          </button>
-        </form>
+          <form onSubmit={formik.handleSubmit} className="space-y-4">
+            {[
+              { id: 'name', label: 'Full Name', type: 'text', icon: <User className="w-5 h-5" /> },
+              { id: 'email', label: 'Email', type: 'email', icon: <Mail className="w-5 h-5" /> },
+              { id: 'phone', label: 'Phone Number', type: 'text', maxLength: 10, icon: <Phone className="w-5 h-5" /> },
+            ].map(({ id, label, type, icon, ...rest }) => (
+              <div key={id} className="form-control">
+                <label htmlFor={id} className="label">
+                  <span className="label-text font-medium">{label}</span>
+                </label>
+                <div className="relative">
+                  <input
+                    id={id}
+                    type={type}
+                    {...formik.getFieldProps(id)}
+                    {...rest}
+                    className={`input input-bordered w-full pl-10 ${formik.touched[id] && formik.errors[id] ? 'input-error' : ''
+                      }`}
+                  />
+                  <span className="absolute left-3 top-1/2 transform -translate-y-1/2 text-base-content/40">
+                    {icon}
+                  </span>
+                </div>
+                {formik.touched[id] && formik.errors[id] && (
+                  <span className="text-error text-xs mt-1 ml-1">{formik.errors[id]}</span>
+                )}
+              </div>
+            ))}
 
-        <p className="text-sm text-center text-gray-600 dark:text-gray-400 mt-6">
-          Already have an account?{' '}
-          <a href={user.loginRoute} className="text-primary hover:underline font-medium">
-            Login here
-          </a>
-        </p>
-      </div>
+            {/* Seller-specific fields */}
+            {role === 'seller' && (
+              <>
+                {[
+                  { id: 'storeName', label: 'Store Name', icon: <Store className="w-5 h-5" /> },
+                  { id: 'storeAddress', label: 'Store Address', icon: <MapPin className="w-5 h-5" /> }
+                ].map(({ id, label, icon }) => (
+                  <div key={id} className="form-control">
+                    <label htmlFor={id} className="label"><span className="label-text font-medium">{label}</span></label>
+                    <div className="relative">
+                      <input
+                        id={id}
+                        type="text"
+                        {...formik.getFieldProps(id)}
+                        className={`input input-bordered w-full pl-10 ${formik.touched[id] && formik.errors[id] ? 'input-error' : ''}`}
+                      />
+                      <span className="absolute left-3 top-1/2 transform -translate-y-1/2 text-base-content/40">{icon}</span>
+                    </div>
+                    {formik.touched[id] && formik.errors[id] && <span className="text-error text-xs mt-1 ml-1">{formik.errors[id]}</span>}
+                  </div>
+                ))}
+
+                <div className="form-control">
+                  <label htmlFor="storeDescription" className="label"><span className="label-text font-medium">Store Description</span></label>
+                  <div className="relative">
+                    <textarea
+                      id="storeDescription"
+                      rows={3}
+                      {...formik.getFieldProps('storeDescription')}
+                      className={`textarea textarea-bordered w-full pl-10 ${formik.touched.storeDescription && formik.errors.storeDescription ? 'textarea-error' : ''}`}
+                    ></textarea>
+                    <span className="absolute left-3 top-4 text-base-content/40"><FileText className="w-5 h-5" /></span>
+                  </div>
+                  {formik.touched.storeDescription && formik.errors.storeDescription && <span className="text-error text-xs mt-1 ml-1">{formik.errors.storeDescription}</span>}
+                </div>
+              </>
+            )}
+
+            {/* Password */}
+            <div className="form-control">
+              <label className="label"><span className="label-text font-medium">Password</span></label>
+              <div className="relative">
+                <input
+                  type={showPassword ? 'text' : 'password'}
+                  {...formik.getFieldProps('password')}
+                  className={`input input-bordered w-full pl-10 pr-10 ${formik.touched.password && formik.errors.password ? 'input-error' : ''}`}
+                />
+                <Lock className="w-5 h-5 absolute left-3 top-1/2 transform -translate-y-1/2 text-base-content/40" />
+                <button type="button" onClick={() => setShowPassword(!showPassword)} className="absolute right-3 top-1/2 transform -translate-y-1/2 text-base-content/40 hover:text-primary">
+                  {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
+                </button>
+              </div>
+              {formik.touched.password && formik.errors.password && <span className="text-error text-xs mt-1 ml-1">{formik.errors.password}</span>}
+            </div>
+
+            {/* Confirm Password */}
+            <div className="form-control">
+              <label className="label"><span className="label-text font-medium">Confirm Password</span></label>
+              <div className="relative">
+                <input
+                  type={showConfirmPassword ? 'text' : 'password'}
+                  {...formik.getFieldProps('confirmPassword')}
+                  className={`input input-bordered w-full pl-10 pr-10 ${formik.touched.confirmPassword && formik.errors.confirmPassword ? 'input-error' : ''}`}
+                />
+                <Lock className="w-5 h-5 absolute left-3 top-1/2 transform -translate-y-1/2 text-base-content/40" />
+                <button type="button" onClick={() => setShowConfirmPassword(!showConfirmPassword)} className="absolute right-3 top-1/2 transform -translate-y-1/2 text-base-content/40 hover:text-primary">
+                  {showConfirmPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
+                </button>
+              </div>
+              {formik.touched.confirmPassword && formik.errors.confirmPassword && <span className="text-error text-xs mt-1 ml-1">{formik.errors.confirmPassword}</span>}
+            </div>
+
+            <div className="form-control mt-6">
+              <button
+                type="submit"
+                className="btn btn-primary w-full gap-2 text-lg"
+                disabled={loading}
+              >
+                {loading ? <span className="loading loading-spinner"></span> : <UserPlus className="w-5 h-5" />}
+                {loading ? 'Registering...' : role === 'seller' ? 'Join as Seller' : 'Create Account'}
+              </button>
+            </div>
+          </form>
+
+          <div className="text-center mt-4">
+            <p className="text-sm text-base-content/60">
+              Already have an account?{' '}
+              <Link to={user.loginRoute} className="link link-primary font-bold hover:no-underline">
+                Login here
+              </Link>
+            </p>
+          </div>
+        </div>
+      </motion.div>
     </div>
   );
 };

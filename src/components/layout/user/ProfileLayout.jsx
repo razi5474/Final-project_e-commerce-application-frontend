@@ -1,17 +1,16 @@
 import React from 'react';
 import { Outlet } from 'react-router-dom';
-import Sidebar from './Sidebar'; // You'll create this sidebar like SellerSidebar
+import Sidebar from './Sidebar';
 
 const ProfileLayout = () => {
   return (
-    <div className="flex flex-col min-h-screen">
-      <div className="flex flex-1">
-        <Sidebar />
-        <main className="flex-1 bg-base-100 text-base-content p-4 overflow-y-auto">
+    <div className="flex flex-col md:flex-row min-h-screen bg-base-200">
+      <Sidebar />
+      <main className="flex-1 p-6 md:p-10 overflow-y-auto w-full">
+        <div className="max-w-5xl mx-auto">
           <Outlet />
-        </main>
-      </div>
-  
+        </div>
+      </main>
     </div>
   );
 };

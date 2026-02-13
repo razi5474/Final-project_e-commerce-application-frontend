@@ -1,6 +1,9 @@
 import React, { useEffect, useState } from 'react';
 import { api } from '../../config/axiosInstance';
 import Loader from '../../components/common/Loader';
+import { User, Mail, Phone, Store, MapPin, FileText, Edit2, Save, X } from 'lucide-react';
+import { motion } from 'framer-motion';
+import { toast } from 'react-hot-toast';
 
 const SellerProfile = () => {
   const [profile, setProfile] = useState(null);
@@ -8,6 +11,10 @@ const SellerProfile = () => {
   const [formData, setFormData] = useState({});
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+
+  useEffect(() => {
+    fetchProfile();
+  }, []);
 
   const fetchProfile = async () => {
     try {
@@ -23,14 +30,11 @@ const SellerProfile = () => {
       });
     } catch (error) {
       console.error(error);
+      toast.error("Failed to load profile");
     } finally {
       setLoading(false);
     }
   };
-
-  useEffect(() => {
-    fetchProfile();
-  }, []);
 
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
@@ -42,8 +46,10 @@ const SellerProfile = () => {
       const { data } = await api.patch('/seller/update', formData);
       setProfile(data);
       setEditMode(false);
+      toast.success("Profile updated successfully");
     } catch (error) {
       console.error(error);
+      toast.error("Failed to update profile");
     } finally {
       setSaving(false);
     }
@@ -51,90 +57,113 @@ const SellerProfile = () => {
 
   if (loading) return <Loader message="Loading profile..." />;
 
+  const fields = [
+    { name: 'name', label: 'Full Name', icon: <User className="w-5 h-5" /> },
+    { name: 'email', label: 'Email', icon: <Mail className="w-5 h-5" />, disabled: true },
+    { name: 'phone', label: 'Phone', icon: <Phone className="w-5 h-5" /> },
+    { name: 'storeName', label: 'Store Name', icon: <Store className="w-5 h-5" /> },
+    { name: 'storeAddress', label: 'Store Address', icon: <MapPin className="w-5 h-5" /> },
+  ];
+
   return (
-    <div className="max-w-4xl mx-auto p-4">
-      <h2 className="text-2xl font-bold mb-4">Seller Profile</h2>
-      <div className="bg-base-100 text-base-content shadow-md rounded p-4 space-y-4">
-        {editMode ? (
-          <>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <input
-                className="border border-base-300 bg-base-200 text-base-content p-2 rounded w-full"
-                name="name"
-                value={formData.name}
-                onChange={handleChange}
-                placeholder="Name"
-              />
-              <input
-                className="border border-base-300 bg-base-200 text-base-content p-2 rounded w-full"
-                name="email"
-                value={formData.email}
-                onChange={handleChange}
-                placeholder="Email"
-              />
-              <input
-                className="border border-base-300 bg-base-200 text-base-content p-2 rounded w-full"
-                name="phone"
-                value={formData.phone}
-                onChange={handleChange}
-                placeholder="Phone"
-              />
-              <input
-                className="border border-base-300 bg-base-200 text-base-content p-2 rounded w-full"
-                name="storeName"
-                value={formData.storeName}
-                onChange={handleChange}
-                placeholder="Store Name"
-              />
-              <input
-                className="border border-base-300 bg-base-200 text-base-content p-2 rounded w-full"
-                name="storeDescription"
-                value={formData.storeDescription}
-                onChange={handleChange}
-                placeholder="Store Description"
-              />
-              <input
-                className="border p-2 rounded w-border border-base-300 bg-base-200 text-base-content p-2 rounded w-full"
-                name="storeAddress"
-                value={formData.storeAddress}
-                onChange={handleChange}
-                placeholder="Store Address"
-              />
-            </div>
-            <div className="flex gap-4 mt-4">
-              <button
-                className="bg-success text-white px-4 py-2 rounded hover:bg-success-focus"
-                onClick={handleSave}
-                disabled={saving}
-              >
-                {saving ? 'Saving...' : 'Save'}
-              </button>
-              <button
-                className="bg-base-300 text-white px-4 py-2 rounded hover:bg-gray-600"
-                onClick={() => setEditMode(false)}
-              >
-                Cancel
-              </button>
-            </div>
-          </>
-        ) : (
-          <>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <p><strong>Name:</strong> {profile.user.name}</p>
-              <p><strong>Email:</strong> {profile.user.email}</p>
-              <p><strong>Phone:</strong> {profile.user.phone}</p>
-              <p><strong>Store Name:</strong> {profile.seller.storeName}</p>
-              <p><strong>Store Description:</strong> {profile.seller.storeDescription}</p>
-              <p><strong>Store Address:</strong> {profile.seller.storeAddress}</p>
-            </div>
-            <button
-              className="mt-4 bg-primary text-white px-4 py-2 rounded hover:bg-blue-600"
-              onClick={() => setEditMode(true)}
-            >
-              Edit Profile
-            </button>
-          </>
+    <div className="max-w-4xl mx-auto space-y-6">
+      <div className="flex justify-between items-center">
+        <div>
+          <h2 className="text-3xl font-bold text-base-content">Seller Profile</h2>
+          <p className="text-base-content/60 mt-1">Manage your personal and store information.</p>
+        </div>
+        {!editMode && (
+          <button
+            onClick={() => setEditMode(true)}
+            className="btn btn-primary gap-2"
+          >
+            <Edit2 className="w-4 h-4" /> Edit Profile
+          </button>
         )}
+      </div>
+
+      <div className="card bg-base-100 shadow-xl border border-base-200">
+        <div className="card-body">
+          {editMode ? (
+            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="space-y-6">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                {fields.map((field) => (
+                  <div key={field.name} className="form-control">
+                    <label className="label font-medium">{field.label}</label>
+                    <div className="relative">
+                      <input
+                        type={field.name === 'email' ? 'email' : 'text'}
+                        name={field.name}
+                        value={formData[field.name]}
+                        onChange={handleChange}
+                        disabled={field.disabled}
+                        className={`input input-bordered w-full pl-10 ${field.disabled ? 'bg-base-200' : ''}`}
+                      />
+                      <div className="absolute left-3 top-1/2 -translate-y-1/2 text-base-content/40">
+                        {field.icon}
+                      </div>
+                    </div>
+                  </div>
+                ))}
+                <div className="form-control md:col-span-2">
+                  <label className="label font-medium">Store Description</label>
+                  <div className="relative">
+                    <textarea
+                      className="textarea textarea-bordered w-full pl-10 min-h-[100px]"
+                      name="storeDescription"
+                      value={formData.storeDescription}
+                      onChange={handleChange}
+                    ></textarea>
+                    <div className="absolute left-3 top-6 text-base-content/40">
+                      <FileText className="w-5 h-5" />
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <div className="flex justify-end gap-3 pt-4 border-t border-base-200">
+                <button
+                  className="btn btn-ghost"
+                  onClick={() => setEditMode(false)}
+                  disabled={saving}
+                >
+                  Cancel
+                </button>
+                <button
+                  className="btn btn-primary gap-2"
+                  onClick={handleSave}
+                  disabled={saving}
+                >
+                  {saving ? <span className="loading loading-spinner loading-sm"></span> : <Save className="w-4 h-4" />}
+                  Save Changes
+                </button>
+              </div>
+            </motion.div>
+          ) : (
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-6">
+              {fields.map((field) => (
+                <div key={field.name} className="flex items-center gap-4 p-4 rounded-xl bg-base-200/50">
+                  <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center text-primary shrink-0">
+                    {field.icon}
+                  </div>
+                  <div>
+                    <p className="text-xs uppercase font-bold text-base-content/50 tracking-wider mb-0.5">{field.label}</p>
+                    <p className="font-semibold text-lg">{profile.user[field.name] || profile.seller[field.name]}</p>
+                  </div>
+                </div>
+              ))}
+              <div className="md:col-span-2 flex items-start gap-4 p-4 rounded-xl bg-base-200/50">
+                <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center text-primary shrink-0">
+                  <FileText className="w-6 h-6" />
+                </div>
+                <div className="flex-1">
+                  <p className="text-xs uppercase font-bold text-base-content/50 tracking-wider mb-2">Store Description</p>
+                  <p className="leading-relaxed text-base-content/80">{profile.seller.storeDescription}</p>
+                </div>
+              </div>
+            </div>
+          )}
+        </div>
       </div>
     </div>
   );

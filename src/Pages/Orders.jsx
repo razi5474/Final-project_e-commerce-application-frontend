@@ -2,6 +2,8 @@ import React, { useEffect, useState } from 'react';
 import { api } from '../config/axiosInstance';
 import { toast } from 'react-hot-toast';
 import { Link } from 'react-router-dom';
+import { Package, Truck, CheckCircle, Clock, Calendar, CreditCard, ChevronLeft, ChevronRight } from 'lucide-react';
+import { motion } from 'framer-motion';
 
 const Orders = () => {
   const [orders, setOrders] = useState([]);
@@ -20,9 +22,6 @@ const Orders = () => {
     fetchOrders();
   }, []);
 
-  const boxIcon =
-    'https://raw.githubusercontent.com/prebuiltui/prebuiltui/main/assets/e-commerce/boxIcon.svg';
-
   const paginatedOrders = orders.slice(
     (currentPage - 1) * ordersPerPage,
     currentPage * ordersPerPage
@@ -30,122 +29,143 @@ const Orders = () => {
 
   const totalPages = Math.ceil(orders.length / ordersPerPage);
 
+  const getStatusColor = (status) => {
+    switch (status) {
+      case 'processing': return 'badge-warning';
+      case 'shipped': return 'badge-info';
+      case 'delivered': return 'badge-success';
+      case 'cancelled': return 'badge-error';
+      default: return 'badge-ghost';
+    }
+  };
+
+  const getStatusIcon = (status) => {
+    switch (status) {
+      case 'processing': return <Clock className="w-3 h-3" />;
+      case 'shipped': return <Truck className="w-3 h-3" />;
+      case 'delivered': return <CheckCircle className="w-3 h-3" />;
+      default: return <Package className="w-3 h-3" />;
+    }
+  };
+
   if (!orders.length) {
     return (
-      <div className="text-center py-10">
-        <h2 className="text-2xl font-semibold mb-2 text-base-content">My Orders</h2>
-        <p className="text-gray-500">No orders yet.</p>
+      <div className="flex flex-col items-center justify-center min-h-[50vh] gap-4">
+        <div className="w-20 h-20 bg-base-200 rounded-full flex items-center justify-center">
+          <Package className="w-10 h-10 text-base-content/30" />
+        </div>
+        <h2 className="text-2xl font-bold text-base-content">No orders found</h2>
+        <p className="text-base-content/60">You haven't placed any orders yet.</p>
+        <Link to="/products" className="btn btn-primary mt-2">Start Shopping</Link>
       </div>
     );
   }
 
   return (
-    <div className="md:p-10 p-4 space-y-6">
-      <h2 className="text-2xl font-bold text-base-content">Orders List</h2>
+    <div className="container mx-auto px-4 py-8 max-w-5xl">
+      <h1 className="text-3xl font-bold mb-8 text-base-content">My Orders</h1>
 
-      {paginatedOrders.map((order, index) => (
-        <div
-          key={order._id || index}
-          className="flex flex-col md:grid md:grid-cols-[2fr_1.5fr_1fr_1.5fr] md:items-center gap-5 p-5 max-w-5xl rounded-md border border-base-300 bg-base-100 text-base-content"
-        >
-          {/* Products */}
-          <div className="flex gap-5 items-center">
-            <Link to={`/product/productDeatails/${order.products?.[0]?.productID?._id}`}>
-              <img
-                className="w-20 h-12 object-contain opacity-100 bg-white"
-                src={
-                  order.products?.[0]?.productID?.images?.[1] ||
-                  order.products?.[0]?.productID?.images?.[0] ||
-                  boxIcon
-                }
-                alt="product"
-              />
-            </Link>
-            <div>
-              {order.products.map((item, i) => (
-                <div key={i} className="flex flex-col justify-center">
-                  <Link
-                    to={`/product/productDeatails/${item.productID?._id}`}
-                    className="font-medium hover:underline"
-                  >
-                    {item.productID?.title || 'Deleted Product'}
-                    {item.quantity > 1 && (
-                      <span className="text-indigo-500 ml-1">x {item.quantity}</span>
-                    )}
-                  </Link>
+      <div className="space-y-6">
+        {paginatedOrders.map((order, index) => (
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: index * 0.1 }}
+            key={order._id || index}
+            className="card bg-base-100 shadow-md border border-base-200 overflow-hidden"
+          >
+            <div className="bg-base-200/50 p-4 flex flex-wrap gap-4 justify-between items-center text-sm">
+              <div className="flex gap-6">
+                <div>
+                  <span className="block text-base-content/60 mb-1 font-medium">Order Placed</span>
+                  <span className="flex items-center gap-1 font-medium">
+                    <Calendar className="w-3.5 h-3.5" />
+                    {new Date(order.createdAt).toLocaleDateString()}
+                  </span>
                 </div>
-              ))}
+                <div>
+                  <span className="block text-base-content/60 mb-1 font-medium">Total Amount</span>
+                  <span className="font-bold">₹{order.totalPrice}</span>
+                </div>
+                <div className="hidden sm:block">
+                  <span className="block text-base-content/60 mb-1 font-medium">Ship To</span>
+                  <span className="font-medium text-primary cursor-help" title={`${order.shippingAddress?.address}, ${order.shippingAddress?.city}`}>{order.shippingAddress?.fullName}</span>
+                </div>
+              </div>
+              <div className="flex gap-3">
+                <span className={`badge ${getStatusColor(order.orderStatus)} gap-1`}>
+                  {getStatusIcon(order.orderStatus)}
+                  {order.orderStatus.toUpperCase()}
+                </span>
+              </div>
             </div>
-          </div>
 
-          {/* Shipping Address */}
-          <div className="text-sm leading-snug">
-            <p className="font-medium">{order.shippingAddress?.fullName}</p>
-            <p>
-              {order.shippingAddress?.address}, {order.shippingAddress?.city},{' '}
-              {order.shippingAddress?.state} - {order.shippingAddress?.postalCode},{' '}
-              {order.shippingAddress?.country}
-            </p>
-            <p>Phone: {order.shippingAddress?.phone}</p>
-          </div>
+            <div className="p-4 sm:p-6">
+              <div className="flex flex-col md:flex-row gap-6">
+                <div className="flex-1 space-y-4">
+                  {order.products.map((item, i) => (
+                    <div key={i} className="flex gap-4">
+                      <Link to={`/product/productDeatails/${item.productID?._id}`}>
+                        <div className="w-20 h-20 bg-base-200 rounded-md overflow-hidden flex-shrink-0 border border-base-200">
+                          <img
+                            src={item.productID?.images?.[1] || item.productID?.images?.[0] || '/default-product.jpg'}
+                            alt={item.productID?.title}
+                            className="w-full h-full object-cover"
+                          />
+                        </div>
+                      </Link>
+                      <div>
+                        <Link to={`/product/productDeatails/${item.productID?._id}`} className="font-bold hover:text-primary transition-colors line-clamp-1">
+                          {item.productID?.title || 'Product Unavailable'}
+                        </Link>
+                        <p className="text-sm text-base-content/60">Quantity: {item.quantity}</p>
+                        <p className="text-sm font-medium mt-1">₹{item.price}</p>
+                      </div>
+                    </div>
+                  ))}
+                </div>
 
-          {/* Price */}
-          <p className="font-medium text-base text-black/70">₹{order.totalPrice}</p>
+                <div className="md:w-1/3 flex flex-col gap-2 border-t md:border-t-0 md:border-l border-base-200 pt-4 md:pt-0 md:pl-6">
+                  <h4 className="font-bold text-sm mb-2">Payment Info</h4>
+                  <div className="flex items-center gap-2 text-sm">
+                    <CreditCard className="w-4 h-4 text-base-content/60" />
+                    <span>Status:</span>
+                    <span className={order.paymentStatus === 'paid' ? 'text-success font-medium' : 'text-warning font-medium'}>
+                      {order.paymentStatus === 'paid' ? 'Paid' : 'Pending'}
+                    </span>
+                  </div>
 
-          {/* Order Info */}
-          <div className="text-sm space-y-1">
-            <p>
-              <span className="font-medium">Date:</span>{' '}
-              {new Date(order.createdAt).toLocaleDateString()}
-            </p>
-            <p>
-              <span className="font-medium">Payment:</span>{' '}
-              {order.paymentStatus === 'paid' ? (
-                <span className="text-green-600">Paid</span>
-              ) : (
-                <span className="text-yellow-600">Pending</span>
-              )}
-            </p>
-            <p>
-              <span className="font-medium">Status:</span>{' '}
-              <span
-                className={`px-2 py-1 rounded-full text-xs font-semibold ${
-                  order.orderStatus === 'processing'
-                    ? 'bg-yellow-100 text-yellow-700'
-                    : order.orderStatus === 'shipped'
-                    ? 'bg-blue-100 text-blue-700'
-                    : order.orderStatus === 'delivered'
-                    ? 'bg-green-100 text-green-700'
-                    : 'bg-gray-100 text-gray-700'
-                }`}
-              >
-                {order.orderStatus.toUpperCase()}
-              </span>
-            </p>
-          </div>
-        </div>
-      ))}
+                  <div className="divider my-2"></div>
+                  <button className="btn btn-outline btn-sm w-full">View Invoice</button>
+                </div>
+              </div>
+            </div>
+          </motion.div>
+        ))}
+      </div>
 
       {/* Pagination Controls */}
-      <div className="flex justify-center items-center gap-2 mt-6">
-        <button
-          className="btn btn-sm"
-          onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}
-          disabled={currentPage === 1}
-        >
-          Prev
-        </button>
-        <span className="text-sm font-medium">
-          Page {currentPage} of {totalPages}
-        </span>
-        <button
-          className="btn btn-sm"
-          onClick={() => setCurrentPage((prev) => Math.min(prev + 1, totalPages))}
-          disabled={currentPage === totalPages}
-        >
-          Next
-        </button>
-      </div>
+      {totalPages > 1 && (
+        <div className="flex justify-center items-center gap-2 mt-10">
+          <button
+            className="btn btn-sm btn-square"
+            onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}
+            disabled={currentPage === 1}
+          >
+            <ChevronLeft className="w-4 h-4" />
+          </button>
+          <span className="text-sm font-medium px-4">
+            Page {currentPage} of {totalPages}
+          </span>
+          <button
+            className="btn btn-sm btn-square"
+            onClick={() => setCurrentPage((prev) => Math.min(prev + 1, totalPages))}
+            disabled={currentPage === totalPages}
+          >
+            <ChevronRight className="w-4 h-4" />
+          </button>
+        </div>
+      )}
     </div>
   );
 };

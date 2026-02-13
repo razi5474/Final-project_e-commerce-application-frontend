@@ -3,45 +3,184 @@ import { api } from "../config/axiosInstance";
 import ProductCard from "../components/Product/ProductCard";
 import Loader from "../components/common/Loader";
 import BackButton from "../components/common/BackButton";
+import { motion } from "framer-motion";
+import { Grid, Filter, ChevronRight, ShoppingBag, X } from "lucide-react";
+import { Link } from "react-router-dom";
+import toast from "react-hot-toast";
 
 const AllProducts = () => {
   const [products, setProducts] = useState([]);
+  const [filteredProducts, setFilteredProducts] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [showFilter, setShowFilter] = useState(false);
+  const [priceRange, setPriceRange] = useState(500000); // Max possible
+  const [sort, setSort] = useState({ field: 'createdAt', order: 'desc' });
 
   useEffect(() => {
     const fetchAllProducts = async () => {
+      setLoading(true);
       try {
-        const { data } = await api.get("/product/all?limit=1000"); // 👈 make sure this endpoint exists
+        const { data } = await api.get(`/product/all?limit=1000&sort=${sort.field}&order=${sort.order}`);
         setProducts(data.products);
+        setFilteredProducts(data.products);
       } catch (error) {
         console.error("Failed to fetch all products", error);
+        toast.error("Failed to load products");
       } finally {
         setLoading(false);
       }
     };
 
     fetchAllProducts();
-  }, []);
+  }, [sort]);
 
-  if (loading) return <Loader message="Loading all products..." />;
+  useEffect(() => {
+    const filtered = products.filter(p => p.price <= priceRange);
+    setFilteredProducts(filtered);
+  }, [priceRange, products]);
+
+  const handleSortChange = (e) => {
+    const value = e.target.value;
+    switch (value) {
+      case 'price-low': setSort({ field: 'price', order: 'asc' }); break;
+      case 'price-high': setSort({ field: 'price', order: 'desc' }); break;
+      case 'newest': setSort({ field: 'createdAt', order: 'desc' }); break;
+      case 'title': setSort({ field: 'title', order: 'asc' }); break;
+      default: setSort({ field: 'createdAt', order: 'desc' });
+    }
+  };
+
+  if (loading) return <Loader message="Scouring our catalog for the best products..." />;
 
   return (
-    <div className="w-full py-6 px-4 md:px-10 font-sans">
-      <BackButton className="mb-6" />
+    <div className="min-h-screen bg-base-100">
+      {/* Header / Hero Section */}
+      <section className="bg-primary/5 py-12 md:py-20 border-b border-base-200">
+        <div className="container mx-auto px-4 md:px-10">
+          <div className="flex items-center gap-2 text-sm text-base-content/60 mb-6 font-medium">
+            <Link to="/" className="hover:text-primary transition-colors">Home</Link>
+            <ChevronRight className="w-4 h-4" />
+            <span className="text-primary">All Products</span>
+          </div>
 
-      <h1 className="text-3xl md:text-4xl font-bold text-primary mb-8 text-left">
-        All Products
-      </h1>
+          <div className="flex flex-col md:flex-row md:items-end justify-between gap-6">
+            <div>
+              <motion.h1
+                initial={{ opacity: 0, x: -20 }}
+                animate={{ opacity: 1, x: 0 }}
+                className="text-4xl md:text-5xl font-extrabold text-base-content mb-4"
+              >
+                Our Complete <span className="text-primary">Collection</span>
+              </motion.h1>
+              <p className="text-lg text-base-content/60 max-w-xl">
+                Explore our wide range of premium electronics, fashion, and home essentials curated just for you.
+              </p>
+            </div>
 
-      {products.length === 0 ? (
-        <p className="text-gray-500">No products available.</p>
-      ) : (
-        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-6">
-          {products.map((product) => (
-            <ProductCard key={product._id} product={product} />
-          ))}
+            <div className="flex gap-3">
+              <div className="badge badge-lg badge-primary gap-2 p-4 h-auto font-bold shadow-md shadow-primary/20">
+                <ShoppingBag className="w-4 h-4" />
+                {products.length} Products
+              </div>
+            </div>
+          </div>
         </div>
-      )}
+      </section>
+
+      <div className="container mx-auto py-12 px-4 md:px-10">
+        {/* Toolbar */}
+        <div className="flex flex-col gap-6 mb-10 pb-6 border-b border-base-200">
+          <div className="flex justify-between items-center">
+            <div className="flex items-center gap-4">
+              <button
+                className={`btn ${showFilter ? 'btn-primary' : 'btn-ghost'} gap-2 font-bold bg-base-200/50`}
+                onClick={() => setShowFilter(!showFilter)}
+              >
+                <Filter className="w-4 h-4" /> Filter
+              </button>
+              <div className="hidden sm:flex items-center gap-2 bg-base-200/50 p-1 rounded-lg">
+                <button className="btn btn-sm btn-square btn-primary"><Grid className="w-4 h-4" /></button>
+                <button className="btn btn-sm btn-square btn-ghost opacity-50"><Filter className="w-4 h-4 rotate-90" /></button>
+              </div>
+            </div>
+
+            <select
+              className="select select-bordered select-sm md:select-md w-full max-w-[170px] md:max-w-xs bg-base-200/50 font-medium"
+              onChange={handleSortChange}
+              defaultValue="newest"
+            >
+              <option value="featured" disabled>Sort By</option>
+              <option value="newest">Newest First</option>
+              <option value="price-low">Price: Low to High</option>
+              <option value="price-high">Price: High to Low</option>
+              <option value="title">Product Name</option>
+            </select>
+          </div>
+
+          {/* Filter Bar */}
+          {showFilter && (
+            <motion.div
+              initial={{ height: 0, opacity: 0 }}
+              animate={{ height: 'auto', opacity: 1 }}
+              className="bg-base-200/30 p-6 rounded-2xl border border-base-200"
+            >
+              <div className="flex justify-between items-center mb-4">
+                <h3 className="font-bold text-lg">Filter Products</h3>
+                <button onClick={() => setShowFilter(false)}><X className="w-5 h-5 opacity-50" /></button>
+              </div>
+              <div className="max-w-md">
+                <label className="label font-medium">Max Price: <span className="text-primary font-bold">₹{priceRange.toLocaleString()}</span></label>
+                <input
+                  type="range"
+                  min="0"
+                  max="500000"
+                  value={priceRange}
+                  onChange={(e) => setPriceRange(parseInt(e.target.value))}
+                  className="range range-primary range-sm"
+                />
+                <div className="flex justify-between text-xs px-2 mt-2 opacity-50 font-bold">
+                  <span>₹0</span>
+                  <span>₹5L+</span>
+                </div>
+              </div>
+            </motion.div>
+          )}
+        </div>
+
+        {filteredProducts.length === 0 ? (
+          <div className="flex flex-col items-center justify-center py-20 text-center">
+            <div className="bg-base-200 p-8 rounded-full mb-6">
+              <ShoppingBag className="w-16 h-16 text-base-content/20" />
+            </div>
+            <h2 className="text-2xl font-bold mb-2">No products found</h2>
+            <p className="text-base-content/60 mb-8">Try adjusting your filters or check back later.</p>
+            <button
+              className="btn btn-primary rounded-full px-8"
+              onClick={() => { setPriceRange(500000); setShowFilter(false); }}
+            >
+              Reset Filters
+            </button>
+          </div>
+        ) : (
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5 }}
+            className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8"
+          >
+            {filteredProducts.map((product, index) => (
+              <motion.div
+                key={product._id}
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: index * 0.05 }}
+              >
+                <ProductCard product={product} />
+              </motion.div>
+            ))}
+          </motion.div>
+        )}
+      </div>
     </div>
   );
 };

@@ -1,73 +1,66 @@
 import React from 'react';
-import { NavLink } from 'react-router-dom';
-import { FaUserShield, FaUsers, FaStore, FaTachometerAlt, FaBox, FaClipboardList, FaStar, FaSignOutAlt, FaThLarge } from 'react-icons/fa';
-import { useNavigate } from 'react-router-dom';
-import { api } from '../../../config/axiosInstance';
-import { toast } from 'react-hot-toast';
+import { NavLink, useNavigate } from 'react-router-dom';
+import { LayoutDashboard, Users, Store, Package, ShoppingBag, Star, User, LogOut, List } from 'lucide-react';
 import { useDispatch } from 'react-redux';
 import { clearUser } from '../../../Redux/Features/user/userSlice';
 
-const links = [
-  { name: 'Dashboard', to: '/admin', icon: <FaTachometerAlt /> },
-  { name: 'Profile', to: '/admin/profile', icon: <FaUserShield /> },
-  { name: 'Manage Users', to: '/admin/users', icon: <FaUsers /> },
-  { name: 'Manage Sellers', to: '/admin/sellers', icon: <FaStore /> },
-  { name: 'Manage Products', to: '/admin/manage-products', icon: <FaBox /> },
-  { name: 'Manage Orders', to: '/admin/orders', icon: <FaClipboardList /> },
-  { name: 'Manage Reviews', to: '/admin/reviews', icon: <FaStar /> },
-  { name: 'Manage Categories', to: '/admin/categories', icon: <FaThLarge /> }, // ✅ NEW
-];
-
 const AdminSidebar = () => {
-  const navigate = useNavigate();
   const dispatch = useDispatch();
+  const navigate = useNavigate();
 
-  const handleLogout = async () => {
-  try {
-    await api.get('/user/logout');
+  const handleLogout = () => {
     dispatch(clearUser());
-    localStorage.clear(); // optional
-    toast.success('Logged out successfully');
-    navigate('/login');
-  } catch (err) {
-    console.error("Logout failed", err);
-    toast.error("Logout failed");
-  }
-};
+    navigate('/admin/login');
+  };
 
-  const linkClass = ({ isActive }) =>
-    `flex items-center gap-3 px-4 py-3 rounded-lg transition-all text-sm font-medium ${
-      isActive
-        ? 'bg-white text-blue-600 shadow'
-        : 'text-white hover:bg-blue-400/70'
-    }`;
+  const navItems = [
+    { to: '/admin', icon: <LayoutDashboard className="w-5 h-5" />, label: 'Dashboard', end: true },
+    { to: '/admin/users', icon: <Users className="w-5 h-5" />, label: 'Manage Users' },
+    { to: '/admin/sellers', icon: <Store className="w-5 h-5" />, label: 'Manage Sellers' },
+    { to: '/admin/manage-products', icon: <Package className="w-5 h-5" />, label: 'Products' },
+    { to: '/admin/categories', icon: <List className="w-5 h-5" />, label: 'Categories' },
+    { to: '/admin/orders', icon: <ShoppingBag className="w-5 h-5" />, label: 'Orders' },
+    { to: '/admin/reviews', icon: <Star className="w-5 h-5" />, label: 'Reviews' },
+    { to: '/admin/profile', icon: <User className="w-5 h-5" />, label: 'Profile' },
+  ];
 
   return (
-    <aside className="w-16 md:w-64 bg-gradient-to-b from-blue-600 to-purple-600 text-white min-h-screen transition-all duration-300">
-      <div className="p-4">
-        <h2 className="text-xl font-bold hidden md:block">Admin Panel</h2>
+    <aside className="hidden md:flex flex-col w-64 bg-base-100 border-r border-base-200 min-h-screen sticky top-0">
+      <div className="p-6 border-b border-base-200">
+        <h2 className="text-xl font-bold text-error flex items-center gap-2">
+          <span className="badge badge-error badge-outline text-xs">ADMIN</span>
+          Panel
+        </h2>
       </div>
-      <nav className="flex flex-col gap-1">
-        {links.map(({ name, to, icon }) => (
+
+      <nav className="flex-1 p-4 space-y-2 overflow-y-auto">
+        {navItems.map((item) => (
           <NavLink
-            key={name}
-            to={to}
-            className={linkClass}
-            end={to === '/admin'} // Only for exact dashboard match
+            key={item.to}
+            to={item.to}
+            end={item.end}
+            className={({ isActive }) =>
+              `flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-200 font-medium ${isActive
+                ? 'bg-error text-error-content shadow-md'
+                : 'text-base-content/70 hover:bg-base-200 hover:text-base-content'
+              }`
+            }
           >
-            <span className="text-lg">{icon}</span>
-            <span className="hidden md:inline">{name}</span>
+            {item.icon}
+            <span>{item.label}</span>
           </NavLink>
         ))}
       </nav>
-      <button
-         onClick={handleLogout}
-        className="mt-auto flex items-center gap-3 px-4 py-3 text-white hover:bg-red-500 text-sm">
-        <span className="text-lg">
-          <FaSignOutAlt />
-        </span>
-        <span className="hidden md:inline">Logout</span>
-      </button>
+
+      <div className="p-4 border-t border-base-200">
+        <button
+          onClick={handleLogout}
+          className="flex items-center gap-3 w-full px-4 py-3 rounded-xl text-error hover:bg-error/10 transition-colors font-medium"
+        >
+          <LogOut className="w-5 h-5" />
+          <span>Logout</span>
+        </button>
+      </div>
     </aside>
   );
 };

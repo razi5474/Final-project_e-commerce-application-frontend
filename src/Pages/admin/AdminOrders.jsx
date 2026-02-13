@@ -1,10 +1,13 @@
 import React, { useEffect, useState } from 'react';
 import { api } from '../../config/axiosInstance';
 import toast from 'react-hot-toast';
-import { FaTrash } from 'react-icons/fa';
+import { Trash2, Package, Calendar, User, Mail, DollarSign, CheckCircle, Clock, Truck, XCircle, Search } from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
 
 const AdminOrders = () => {
   const [orders, setOrders] = useState([]);
+  const [filteredOrders, setFilteredOrders] = useState([]);
+  const [searchTerm, setSearchTerm] = useState('');
   const [loading, setLoading] = useState(true);
   const [showModal, setShowModal] = useState(false);
   const [selectedOrderId, setSelectedOrderId] = useState(null);
@@ -13,6 +16,7 @@ const AdminOrders = () => {
     try {
       const res = await api.get('/order/admin-orders');
       setOrders(res.data.orders);
+      setFilteredOrders(res.data.orders);
     } catch (err) {
       toast.error('❌ Failed to fetch orders');
     } finally {
@@ -20,11 +24,25 @@ const AdminOrders = () => {
     }
   };
 
+  useEffect(() => {
+    fetchAdminOrders();
+  }, []);
+
+  useEffect(() => {
+    const results = orders.filter(order =>
+      order.user?.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      order.user?.email?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      order._id.toLowerCase().includes(searchTerm.toLowerCase())
+    );
+    setFilteredOrders(results);
+  }, [searchTerm, orders]);
+
   const handleStatusChange = async (orderId, newStatus) => {
     try {
       await api.patch(`/order/admin-update-status/${orderId}`, { status: newStatus });
       toast.success('✅ Status updated');
-      fetchAdminOrders();
+      // Optimistic update
+      setOrders(orders.map(o => o._id === orderId ? { ...o, orderStatus: newStatus } : o));
     } catch (err) {
       toast.error('❌ Failed to update status');
     }
@@ -39,141 +57,152 @@ const AdminOrders = () => {
     try {
       await api.delete(`/order/admin-delete/${selectedOrderId}`);
       toast.success('🗑️ Order deleted');
+      setOrders(orders.filter(o => o._id !== selectedOrderId));
       setShowModal(false);
-      fetchAdminOrders();
     } catch (err) {
       toast.error('❌ Failed to delete order');
     }
   };
 
-  useEffect(() => {
-    fetchAdminOrders();
-  }, []);
+  const getStatusBadge = (status) => {
+    switch (status) {
+      case 'processing': return <div className="badge badge-warning gap-1 text-white"><Clock className="w-3 h-3" /> Processing</div>;
+      case 'shipped': return <div className="badge badge-info gap-1 text-white"><Truck className="w-3 h-3" /> Shipped</div>;
+      case 'delivered': return <div className="badge badge-success gap-1 text-white"><CheckCircle className="w-3 h-3" /> Delivered</div>;
+      case 'cancelled': return <div className="badge badge-error gap-1 text-white"><XCircle className="w-3 h-3" /> Cancelled</div>;
+      default: return <div className="badge badge-ghost">{status}</div>;
+    }
+  };
 
   return (
-    <div className="p-4">
-      <h2 className="text-2xl font-bold mb-4">All Orders</h2>
-
-      {loading ? (
-        <p>Loading orders...</p>
-      ) : orders.length === 0 ? (
-        <p>No orders found.</p>
-      ) : (
-        <div className="overflow-x-auto hidden md:block">
-          <table className="table w-full border border-base-200 text-sm md:text-base">
-            <thead>
-              <tr className="bg-base-200 text-base-content">
-                <th>User</th>
-                <th>Email</th>
-                <th>Products</th>
-                <th>Total</th>
-                <th>Status</th>
-                <th>Payment</th>
-                <th>Date</th>
-                <th>Action</th>
-              </tr>
-            </thead>
-            <tbody>
-              {orders.map((order) => (
-                <tr key={order._id} className="align-top">
-                  <td className="font-semibold text-base md:text-lg">
-                    {order.user?.name || 'N/A'}
-                  </td>
-                  <td>{order.user?.email || 'N/A'}</td>
-                  <td>
-                    <ul className="list-disc pl-4 text-xs md:text-sm max-w-[150px] break-words">
-                      {order.products.map((item, idx) => (
-                        <li key={idx}>
-                          {item.productID?.title || 'Unknown'} × {item.quantity}
-                        </li>
-                      ))}
-                    </ul>
-                  </td>
-                  <td>₹{order.totalPrice}</td>
-                  <td>
-                    <select
-                      value={order.orderStatus}
-                      onChange={(e) => handleStatusChange(order._id, e.target.value)}
-                      className="select select-sm select-bordered"
-                    >
-                      <option value="processing">Processing</option>
-                      <option value="shipped">Shipped</option>
-                      <option value="delivered">Delivered</option>
-                      <option value="cancelled">Cancelled</option>
-                    </select>
-                  </td>
-                  <td className="capitalize">{order.paymentStatus}</td>
-                  <td>{new Date(order.createdAt).toLocaleDateString()}</td>
-                  <td>
-                    <button
-                      onClick={() => confirmDelete(order._id)}
-                      className="btn btn-sm btn-error text-white"
-                    >
-                      <FaTrash className="text-xs" />
-                    </button>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
+    <div className="space-y-6">
+      <div className="flex flex-col md:flex-row justify-between items-center gap-4">
+        <div>
+          <h2 className="text-3xl font-bold text-base-content">All Orders</h2>
+          <p className="text-base-content/60 mt-1">Manage and track customer orders.</p>
         </div>
-      )}
+        <div className="relative w-full md:w-80">
+          <input
+            type="text"
+            placeholder="Search orders..."
+            className="input input-bordered w-full pl-10"
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+          />
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-base-content/40" />
+        </div>
+      </div>
 
-      {/* Mobile View */}
-      <div className="md:hidden flex flex-col gap-4">
-        {orders.map((order) => (
-          <div
-            key={order._id}
-            className="bg-base-100 p-4 rounded-lg shadow border border-base-200"
-          >
-            <div className="font-bold text-lg mb-1">{order.user?.name || 'N/A'}</div>
-            <p className="text-sm mb-1">{order.user?.email || 'N/A'}</p>
-            <p className="text-xs mb-1">
-              Products:
-              <ul className="list-disc pl-5">
-                {order.products.map((item, idx) => (
-                  <li key={idx}>{item.productID?.title || 'Unknown'} × {item.quantity}</li>
-                ))}
-              </ul>
-            </p>
-            <p className="text-sm mb-1">Total: ₹{order.totalPrice}</p>
-            <p className="text-sm mb-1">Status: {order.orderStatus}</p>
-            <p className="text-sm mb-1">Payment: {order.paymentStatus}</p>
-            <p className="text-sm mb-2">Date: {new Date(order.createdAt).toLocaleDateString()}</p>
-            <div className="flex gap-2">
-              <select
-                value={order.orderStatus}
-                onChange={(e) => handleStatusChange(order._id, e.target.value)}
-                className="select select-sm select-bordered"
-              >
-                <option value="processing">Processing</option>
-                <option value="shipped">Shipped</option>
-                <option value="delivered">Delivered</option>
-                <option value="cancelled">Cancelled</option>
-              </select>
-              <button
-                onClick={() => confirmDelete(order._id)}
-                className="btn btn-sm btn-error text-white"
-              >
-                <FaTrash className="text-xs" />
-              </button>
-            </div>
+      <div className="card bg-base-100 shadow-xl border border-base-200">
+        <div className="card-body p-0">
+          {/* Desktop Table */}
+          <div className="overflow-x-auto">
+            <table className="table">
+              <thead className="bg-base-200/50">
+                <tr>
+                  <th>Order ID & User</th>
+                  <th>Products</th>
+                  <th>Total & Payment</th>
+                  <th>Status</th>
+                  <th>Date</th>
+                  <th className="text-center">Action</th>
+                </tr>
+              </thead>
+              <tbody>
+                <AnimatePresence>
+                  {filteredOrders.map((order, index) => (
+                    <motion.tr
+                      key={order._id}
+                      initial={{ opacity: 0 }}
+                      animate={{ opacity: 1 }}
+                      exit={{ opacity: 0 }}
+                      transition={{ delay: index * 0.05 }}
+                      className="hover"
+                    >
+                      <td>
+                        <div className="flex flex-col">
+                          <span className="text-xs font-mono opacity-50">#{order._id.slice(-6)}</span>
+                          <span className="font-bold flex items-center gap-1"><User className="w-3 h-3" /> {order.user?.name || 'N/A'}</span>
+                          <span className="text-xs flex items-center gap-1 opacity-70"><Mail className="w-3 h-3" /> {order.user?.email || 'N/A'}</span>
+                        </div>
+                      </td>
+                      <td>
+                        <div className="max-h-20 overflow-y-auto scrollbar-thin scrollbar-thumb-base-300">
+                          {order.products.map((item, idx) => (
+                            <div key={idx} className="flex items-center gap-2 mb-1">
+                              <div className="avatar">
+                                <div className="w-8 h-8 rounded bg-base-200">
+                                  <img src={item.productID?.images?.[0]} alt="prod" className="object-cover" />
+                                </div>
+                              </div>
+                              <div className="text-xs">
+                                <div className="font-medium">{item.productID?.title || 'Unknown'}</div>
+                                <div className="opacity-60">Qty: {item.quantity}</div>
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      </td>
+                      <td>
+                        <div className="font-bold flex items-center gap-1">₹{order.totalPrice}</div>
+                        <div className="badge badge-ghost badge-sm capitalize mt-1">{order.paymentStatus}</div>
+                      </td>
+                      <td>
+                        <div className="flex flex-col gap-2">
+                          {getStatusBadge(order.orderStatus)}
+                          <select
+                            value={order.orderStatus}
+                            onChange={(e) => handleStatusChange(order._id, e.target.value)}
+                            className="select select-bordered select-xs w-full max-w-[120px]"
+                          >
+                            <option value="processing">Processing</option>
+                            <option value="shipped">Shipped</option>
+                            <option value="delivered">Delivered</option>
+                            <option value="cancelled">Cancelled</option>
+                          </select>
+                        </div>
+                      </td>
+                      <td className="text-sm">
+                        <div className="flex items-center gap-1 text-base-content/70">
+                          <Calendar className="w-3 h-3" />
+                          {new Date(order.createdAt).toLocaleDateString()}
+                        </div>
+                      </td>
+                      <td className="text-center">
+                        <button
+                          onClick={() => confirmDelete(order._id)}
+                          className="btn btn-square btn-sm btn-ghost text-error hover:bg-error/10"
+                          title="Delete Order"
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </button>
+                      </td>
+                    </motion.tr>
+                  ))}
+                </AnimatePresence>
+              </tbody>
+            </table>
+            {loading && <div className="text-center py-10"><span className="loading loading-spinner text-primary"></span></div>}
+            {!loading && filteredOrders.length === 0 && <div className="text-center py-10 text-base-content/60">No orders found.</div>}
           </div>
-        ))}
+        </div>
       </div>
 
       {/* Delete Confirmation Modal */}
       {showModal && (
-        <div className="fixed inset-0 flex items-center justify-center bg-black/40 z-50">
-          <div className="bg-white p-6 rounded-lg shadow-lg max-w-sm w-full">
-            <h3 className="text-lg font-bold mb-4">Confirm Delete</h3>
-            <p className="mb-4">Are you sure you want to delete this order?</p>
-            <div className="flex justify-end gap-2">
-              <button onClick={() => setShowModal(false)} className="btn btn-sm">Cancel</button>
-              <button onClick={deleteOrder} className="btn btn-sm btn-error text-white">Delete</button>
+        <dialog id="delete_modal" className="modal modal-open">
+          <div className="modal-box">
+            <h3 className="font-bold text-lg text-error">Confirm Delete</h3>
+            <p className="py-4">Are you sure you want to delete this order? This action cannot be undone.</p>
+            <div className="modal-action">
+              <button className="btn" onClick={() => setShowModal(false)}>Cancel</button>
+              <button className="btn btn-error text-white" onClick={deleteOrder}>Delete</button>
             </div>
           </div>
-        </div>
+          <form method="dialog" className="modal-backdrop">
+            <button onClick={() => setShowModal(false)}>close</button>
+          </form>
+        </dialog>
       )}
     </div>
   );

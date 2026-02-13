@@ -6,7 +6,7 @@ import { useDispatch, useSelector } from 'react-redux';
 import { api } from '../config/axiosInstance';
 import { saveUser, clearUser } from '../Redux/Features/user/userSlice';
 import Loader from '../components/common/Loader';
-import SellerSidebar from '../components/layout/seller/sellerSidebar';
+import SellerSidebar from '../components/layout/seller/SellerSidebar';
 
 const SellerLayout = () => {
   const dispatch = useDispatch();
@@ -40,18 +40,16 @@ const SellerLayout = () => {
   const isSeller = isAuthUser && userData?.role === 'seller';
 
   return (
-    <div className="flex flex-col min-h-screen">
+    <div className="flex flex-col min-h-screen bg-base-200">
       {isSeller && <SellerNavbar />}
 
-      {/* Content area (sidebar + main content) */}
-      <div className="flex flex-1">
-        <SellerSidebar />
-        <main className="flex-1 bg-base-100 text-base-content p-4 overflow-y-auto">
+      <div className="flex flex-1 max-w-[1600px] w-full mx-auto">
+        {isSeller && <SellerSidebar />}
+        <main className="flex-1 p-6 md:p-8 overflow-y-auto w-full">
           <Outlet />
         </main>
       </div>
 
-      {/* Footer stays at bottom */}
       <Footer />
     </div>
   );

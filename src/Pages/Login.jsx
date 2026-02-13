@@ -2,11 +2,11 @@ import React, { useState, useEffect } from 'react';
 import { useFormik } from 'formik';
 import * as Yup from 'yup';
 import { api } from '../config/axiosInstance';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 import { useDispatch, useSelector } from 'react-redux';
 import { clearUser, saveUser } from '../Redux/Features/user/userSlice';
-import { AiOutlineEye, AiOutlineEyeInvisible } from 'react-icons/ai';
-import { Link } from 'react-router-dom';
+import { Eye, EyeOff, LogIn, Mail, Lock, User, ShoppingBag, Shield } from 'lucide-react';
+import { motion } from 'framer-motion';
 
 const Login = ({ role }) => {
   const navigate = useNavigate();
@@ -22,6 +22,8 @@ const Login = ({ role }) => {
     loginAPI: '/user/login',
     signupRoute: '/register',
     profileRoute: '/user/profile',
+    icon: <User className="w-8 h-8" />,
+    color: 'text-primary',
   };
 
   if (role === 'seller') {
@@ -29,11 +31,15 @@ const Login = ({ role }) => {
     user.loginAPI = '/seller/login';
     user.signupRoute = '/seller/register';
     user.profileRoute = '/seller/profile';
+    user.icon = <ShoppingBag className="w-8 h-8" />;
+    user.color = 'text-secondary';
   } else if (role === 'admin') {
     user.role = 'admin';
     user.loginAPI = '/user/login';
     user.signupRoute = null;
     user.profileRoute = '/admin';
+    user.icon = <Shield className="w-8 h-8" />;
+    user.color = 'text-accent';
   }
 
   // 🔁 Redirect if already logged in
@@ -95,89 +101,109 @@ const Login = ({ role }) => {
   });
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-tr from-blue-100 to-indigo-200 dark:from-gray-900 dark:to-gray-800 px-4">
-      <div className="w-full max-w-md bg-white dark:bg-base-100 rounded-xl shadow-2xl p-8 space-y-6">
-        <h2 className="text-3xl font-bold text-center text-gray-800 dark:text-white">
-          Login to Your{' '}
-          <span className="text-blue-600 capitalize flex items-center justify-center gap-1">
-            {role === 'user' && '👤'}
-            {role === 'seller' && '🛍'}
-            {role === 'admin' && '🛡'}
-            {user.role}
-          </span>{' '}
-          Account
-        </h2>
-
-        {serverError && (
-          <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-2 rounded-md text-sm">
-            {serverError}
-          </div>
-        )}
-
-        <form onSubmit={formik.handleSubmit} className="space-y-5">
-          {/* Email */}
-          <div>
-            <label htmlFor="email" className="block text-sm font-medium text-gray-700 dark:text-white">
-              Email
-            </label>
-            <input
-              type="email"
-              id="email"
-              autoFocus
-              {...formik.getFieldProps('email')}
-              className={`mt-1 block w-full px-4 py-2 border rounded-md shadow-sm focus:ring focus:ring-blue-300 focus:outline-none dark:bg-base-200 ${
-                formik.touched.email && formik.errors.email ? 'border-red-500' : 'border-gray-300'
-              }`}
-            />
-            {formik.touched.email && formik.errors.email && (
-              <p className="text-red-500 text-xs mt-1">{formik.errors.email}</p>
-            )}
+    <div className="min-h-screen flex items-center justify-center bg-base-200 px-4 py-12">
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        className="card w-full max-w-md bg-base-100 shadow-xl"
+      >
+        <div className="card-body">
+          <div className="flex flex-col items-center gap-2 mb-6">
+            <div className={`p-4 rounded-full bg-base-200 ${user.color}`}>
+              {user.icon || <User className="w-8 h-8" />}
+            </div>
+            <h2 className="text-3xl font-bold text-center">
+              Welcome Back
+            </h2>
+            <p className="text-base-content/60 text-center">
+              Login to your <span className="capitalize font-bold text-primary">{user.role}</span> account
+            </p>
           </div>
 
-          {/* Password */}
-          <div className="relative">
-            <label htmlFor="password" className="block text-sm font-medium text-gray-700 dark:text-white">
-              Password
-            </label>
-            <input
-              type={showPassword ? 'text' : 'password'}
-              id="password"
-              {...formik.getFieldProps('password')}
-              className={`mt-1 block w-full px-4 py-2 border rounded-md shadow-sm focus:ring focus:ring-blue-300 focus:outline-none dark:bg-base-200 ${
-                formik.touched.password && formik.errors.password ? 'border-red-500' : 'border-gray-300'
-              }`}
-            />
-            <button
-              type="button"
-              onClick={() => setShowPassword(!showPassword)}
-              className="absolute right-3 top-[38px] text-gray-500 hover:text-blue-600"
+          {serverError && (
+            <motion.div
+              initial={{ opacity: 0, x: -10 }}
+              animate={{ opacity: 1, x: 0 }}
+              className="alert alert-error text-sm py-2 rounded-lg mb-4"
             >
-              {showPassword ? <AiOutlineEyeInvisible /> : <AiOutlineEye />}
-            </button>
-            {formik.touched.password && formik.errors.password && (
-              <p className="text-red-500 text-xs mt-1">{formik.errors.password}</p>
-            )}
-          </div>
+              <svg xmlns="http://www.w3.org/2000/svg" className="stroke-current shrink-0 h-6 w-6" fill="none" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+              <span>{serverError}</span>
+            </motion.div>
+          )}
 
-          {/* Submit */}
-          <button
-            type="submit"
-            className="w-full bg-blue-600 hover:bg-blue-700 text-white py-2 rounded-md transition duration-200 font-semibold disabled:opacity-60"
-            disabled={loading}
-          >
-            {loading ? 'Logging in...' : 'Login'}
-          </button>
-        </form>
+          <form onSubmit={formik.handleSubmit} className="space-y-4">
+            {/* Email */}
+            <div className="form-control">
+              <label className="label">
+                <span className="label-text font-medium">Email</span>
+              </label>
+              <div className="relative">
+                <input
+                  type="email"
+                  placeholder="you@example.com"
+                  {...formik.getFieldProps('email')}
+                  className={`input input-bordered w-full pl-10 ${formik.touched.email && formik.errors.email ? 'input-error' : ''
+                    }`}
+                />
+                <Mail className="w-5 h-5 absolute left-3 top-1/2 transform -translate-y-1/2 text-base-content/40" />
+              </div>
+              {formik.touched.email && formik.errors.email && (
+                <span className="text-error text-xs mt-1 ml-1">{formik.errors.email}</span>
+              )}
+            </div>
 
-        {user.role !== 'admin' && (
-          <div className="text-center text-sm text-gray-600 dark:text-gray-400">
-            Don't have an account?{' '}
-            <Link to={user.signupRoute} className="text-blue-600 hover:underline dark:text-blue-400">
-              Register
-            </Link>
-          </div>
-        )}
-      </div>
+            {/* Password */}
+            <div className="form-control">
+              <label className="label">
+                <span className="label-text font-medium">Password</span>
+              </label>
+              <div className="relative">
+                <input
+                  type={showPassword ? 'text' : 'password'}
+                  placeholder="••••••••"
+                  {...formik.getFieldProps('password')}
+                  className={`input input-bordered w-full pl-10 pr-10 ${formik.touched.password && formik.errors.password ? 'input-error' : ''
+                    }`}
+                />
+                <Lock className="w-5 h-5 absolute left-3 top-1/2 transform -translate-y-1/2 text-base-content/40" />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword(!showPassword)}
+                  className="absolute right-3 top-1/2 transform -translate-y-1/2 text-base-content/40 hover:text-primary transition-colors"
+                >
+                  {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
+                </button>
+              </div>
+              {formik.touched.password && formik.errors.password && (
+                <span className="text-error text-xs mt-1 ml-1">{formik.errors.password}</span>
+              )}
+            </div>
+
+            {/* Submit */}
+            <div className="form-control mt-6">
+              <button
+                type="submit"
+                className="btn btn-primary w-full gap-2 text-lg"
+                disabled={loading}
+              >
+                {loading ? <span className="loading loading-spinner"></span> : <LogIn className="w-5 h-5" />}
+                {loading ? 'Logging in...' : 'Login'}
+              </button>
+            </div>
+          </form>
+
+          {user.role !== 'admin' && (
+            <div className="text-center mt-4">
+              <p className="text-sm text-base-content/60">
+                Don't have an account?{' '}
+                <Link to={user.signupRoute} className="link link-primary font-bold hover:no-underline">
+                  Register
+                </Link>
+              </p>
+            </div>
+          )}
+        </div>
+      </motion.div>
     </div>
   );
 };
