@@ -6,7 +6,7 @@ import { useDispatch, useSelector } from 'react-redux';
 import { api } from '../config/axiosInstance';
 import { saveUser, clearUser } from '../Redux/Features/user/userSlice';
 import Loader from '../components/common/Loader';
-import SellerSidebar from '../components/layout/seller/SellerSidebar';
+import SellerSidebar from '../components/layout/seller/Seller-Sidebar';
 
 const SellerLayout = () => {
   const dispatch = useDispatch();
